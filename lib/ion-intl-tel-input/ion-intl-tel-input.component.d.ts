@@ -241,21 +241,22 @@ export declare class IonIntlTelInputComponent implements ControlValueAccessor, O
     numberInputEl: IonInput;
     private _value;
     country: CountryI;
+    phoneNumber: string;
     countries: CountryI[];
     disabled: boolean;
-    phoneNumber: string;
     phoneUtil: any;
     onTouched: () => void;
     propagateChange: (_: IonIntlTelInputModel) => void;
     constructor(el: ElementRef, platform: Platform, ionIntlTelInputService: IonIntlTelInputService);
-    value: string;
+    value: IonIntlTelInputModel | null;
     emitValueChange(change: IonIntlTelInputModel | null): void;
     ngOnInit(): void;
     ngOnChanges(changes: SimpleChanges): void;
     registerOnChange(fn: any): void;
     registerOnTouched(fn: any): void;
-    writeValue(obj: string): void;
+    writeValue(obj: IonIntlTelInputModel): void;
     setDisabledState(isDisabled: boolean): void;
+    fillValues(value: IonIntlTelInputModel): void;
     hasValue(): boolean;
     onCodeOpen(): void;
     onCodeChange(event: {

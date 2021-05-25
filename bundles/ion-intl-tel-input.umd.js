@@ -288,28 +288,25 @@
             /** @type {?} */
             var error = { phone: true };
             /** @type {?} */
-            var isRequired = control.errors && control.errors.required;
-            /** @type {?} */
             var phoneNumber;
+            console.log(control.value);
+            if (!control.value) {
+                return error;
+            }
             try {
-                phoneNumber = googleLibphonenumber.PhoneNumberUtil.getInstance().parse(control.value.number, control.value.isoCode);
+                phoneNumber = googleLibphonenumber.PhoneNumberUtil.getInstance().parse(control.value.nationalNumber, control.value.isoCode);
             }
             catch (e) {
-                if (!isRequired) {
+                return error;
+            }
+            if (!phoneNumber) {
+                return error;
+            }
+            else {
+                if (!googleLibphonenumber.PhoneNumberUtil.getInstance().isValidNumberForRegion(phoneNumber, control.value.isoCode)) {
                     return error;
                 }
             }
-            if (control.value) {
-                if (!phoneNumber) {
-                    return error;
-                }
-                else {
-                    if (!googleLibphonenumber.PhoneNumberUtil.getInstance().isValidNumberForRegion(phoneNumber, control.value.isoCode)) {
-                        return error;
-                    }
-                }
-            }
-            return;
         };
         return IonIntlTelInputValidators;
     }());
@@ -325,7 +322,6 @@
          * @return {?}
          */
         function (control) {
-            console.log('validate');
             return IonIntlTelInputValidators.phone(control);
         };
         IonIntlTelInputValidatorDirective.decorators = [
@@ -2642,9 +2638,9 @@
             this.codeSelect = new core.EventEmitter();
             // tslint:disable-next-line: variable-name
             this._value = null;
+            this.phoneNumber = '';
             this.countries = [];
             this.disabled = false;
-            this.phoneNumber = '';
             this.phoneUtil = googleLibphonenumber.PhoneNumberUtil.getInstance();
             this.onTouched = (/**
              * @return {?}
@@ -2695,7 +2691,7 @@
                     'ion-touched',
                     'ion-untouched',
                     'ion-dirty',
-                    'ion-pristine'
+                    'ion-pristine',
                 ].forEach((/**
                  * @param {?} c
                  * @return {?}
@@ -2783,6 +2779,8 @@
              * @return {?}
              */
             function (value) {
+                console.log('set value');
+                console.log('value:', value);
                 this._value = value;
                 this.setIonicClasses(this.el);
             },
@@ -2814,19 +2812,21 @@
             this.fetchAllCountries();
             this.setPreferredCountries();
             if (this.onlyCountries.length) {
-                this.countries = this.countries
-                    .filter((/**
+                this.countries = this.countries.filter((/**
                  * @param {?} country
                  * @return {?}
                  */
-                function (country) { return _this.onlyCountries.includes(country.isoCode); }));
+                function (country) {
+                    return _this.onlyCountries.includes(country.isoCode);
+                }));
             }
             if (this.selectFirstCountry) {
                 if (this.defaultCountryiso) {
                     this.setCountry(this.getCountryByIsoCode(this.defaultCountryiso));
                 }
                 else {
-                    if (this.preferredCountries.length && this.preferredCountries.includes(this.defaultCountryiso)) {
+                    if (this.preferredCountries.length &&
+                        this.preferredCountries.includes(this.defaultCountryiso)) {
                         this.setCountry(this.getCountryByIsoCode(this.preferredCountries[0]));
                     }
                     else {
@@ -2844,8 +2844,10 @@
          * @return {?}
          */
         function (changes) {
-            if (this.countries && changes.defaulyCountryisoCode
-                && changes.defaulyCountryisoCode.currentValue !== changes.defaulyCountryisoCode.previousValue) {
+            if (this.countries &&
+                changes.defaulyCountryisoCode &&
+                changes.defaulyCountryisoCode.currentValue !==
+                    changes.defaulyCountryisoCode.previousValue) {
                 this.setCountry(changes.defaulyCountryisoCode.currentValue);
             }
         };
@@ -2880,18 +2882,10 @@
          * @return {?}
          */
         function (obj) {
-            var _this = this;
-            if (obj == null) {
-                this.ngOnInit();
-            }
-            this.phoneNumber = obj;
-            this.value = this.phoneNumber;
-            setTimeout((/**
-             * @return {?}
-             */
-            function () {
-                _this.onNumberChange();
-            }), 1);
+            console.log('write value');
+            console.log(obj);
+            console.log(this.value);
+            this.fillValues(obj);
         };
         /**
          * @param {?} isDisabled
@@ -2903,6 +2897,40 @@
          */
         function (isDisabled) {
             this.disabled = isDisabled;
+        };
+        /**
+         * @param {?} value
+         * @return {?}
+         */
+        IonIntlTelInputComponent.prototype.fillValues = /**
+         * @param {?} value
+         * @return {?}
+         */
+        function (value) {
+            var _this = this;
+            if (value &&
+                value !== null &&
+                typeof value === 'object' &&
+                !this.isNullOrWhiteSpace(value)) {
+                console.log('do');
+                this.phoneNumber = value.nationalNumber;
+                this.setCountry(this.getCountryByIsoCode(value.isoCode));
+                this.value = value;
+            }
+            else if (this.value &&
+                this.value !== null &&
+                typeof this.value === 'object' &&
+                !this.isNullOrWhiteSpace(this.value)) {
+                console.log('doi');
+                this.phoneNumber = this.value.nationalNumber;
+                this.setCountry(this.getCountryByIsoCode(this.value.isoCode));
+            }
+            setTimeout((/**
+             * @return {?}
+             */
+            function () {
+                _this.onNumberChange();
+            }), 1);
         };
         /**
          * @return {?}
@@ -2932,7 +2960,9 @@
          */
         function (event) {
             var _this = this;
+            console.log('code changed');
             if (this.isNullOrWhiteSpace(this.phoneNumber)) {
+                console.log('its null');
                 this.emitValueChange(null);
             }
             else {
@@ -2941,8 +2971,7 @@
                 try {
                     googleNumber = this.phoneUtil.parse(this.phoneNumber, this.country.isoCode.toUpperCase());
                 }
-                catch (e) {
-                }
+                catch (e) { }
                 /** @type {?} */
                 var internationallNo = googleNumber
                     ? this.phoneUtil.format(googleNumber, googleLibphonenumber.PhoneNumberFormat.INTERNATIONAL)
@@ -2955,11 +2984,10 @@
                     this.phoneNumber = this.removeDialCode(internationallNo);
                 }
                 this.emitValueChange({
-                    number: this.phoneNumber,
                     internationalNumber: internationallNo,
                     nationalNumber: nationalNo,
                     isoCode: this.country.isoCode,
-                    dialCode: this.dialCodePrefix + this.country.dialCode
+                    dialCode: this.dialCodePrefix + this.country.dialCode,
                 });
                 this.codeChange.emit();
             }
@@ -3061,21 +3089,36 @@
          * @return {?}
          */
         function () {
-            this.value = this.phoneNumber;
+            console.log('on number change');
+            if (!this.phoneNumber) {
+                this.value = null;
+                this.emitValueChange(null);
+                return;
+            }
+            if (this.country) {
+                this.emitValueChange({
+                    internationalNumber: this.dialCodePrefix + this.country.dialCode + ' ' + this.phoneNumber,
+                    nationalNumber: this.phoneNumber,
+                    isoCode: this.country.isoCode,
+                    dialCode: this.dialCodePrefix + this.country.dialCode,
+                });
+            }
             /** @type {?} */
             var googleNumber;
             try {
                 googleNumber = this.phoneUtil.parse(this.phoneNumber, this.country.isoCode.toUpperCase());
             }
             catch (e) {
+                return;
             }
             /** @type {?} */
             var isoCode = this.country ? this.country.isoCode : null;
             // auto select country based on the extension (and areaCode if needed) (e.g select Canada if number starts with +1 416)
             if (this.enableAutoCountrySelect) {
-                isoCode = googleNumber && googleNumber.getCountryCode()
-                    ? this.getCountryIsoCode(googleNumber.getCountryCode(), googleNumber)
-                    : this.country.isoCode;
+                isoCode =
+                    googleNumber && googleNumber.getCountryCode()
+                        ? this.getCountryIsoCode(googleNumber.getCountryCode(), googleNumber)
+                        : this.country.isoCode;
                 if (isoCode && isoCode !== this.country.isoCode) {
                     /** @type {?} */
                     var newCountry = this.countries.find((/**
@@ -3088,10 +3131,8 @@
                     }
                 }
             }
-            isoCode = isoCode ?
-                isoCode :
-                this.country ? this.country.isoCode : null;
-            if (this.isNullOrWhiteSpace(this.value) || this.isNullOrWhiteSpace(isoCode)) {
+            isoCode = isoCode ? isoCode : this.country ? this.country.isoCode : null;
+            if (!this.phoneNumber || !isoCode) {
                 this.emitValueChange(null);
             }
             else {
@@ -3107,11 +3148,10 @@
                     this.phoneNumber = this.removeDialCode(internationallNo);
                 }
                 this.emitValueChange({
-                    number: this.phoneNumber,
                     internationalNumber: internationallNo,
                     nationalNumber: nationalNo,
                     isoCode: this.country.isoCode,
-                    dialCode: this.dialCodePrefix + this.country.dialCode
+                    dialCode: this.dialCodePrefix + this.country.dialCode,
                 });
             }
         };
@@ -3130,12 +3170,19 @@
             var allowedCtrlChars = /[axcv]/;
             /** @type {?} */
             var allowedOtherKeys = [
-                'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown',
-                'Home', 'End', 'Insert', 'Delete', 'Backspace'
+                'ArrowLeft',
+                'ArrowUp',
+                'ArrowRight',
+                'ArrowDown',
+                'Home',
+                'End',
+                'Insert',
+                'Delete',
+                'Backspace',
             ];
             if (!allowedChars.test(event.key) &&
                 !(event.ctrlKey && allowedCtrlChars.test(event.key)) &&
-                !(allowedOtherKeys.includes(event.key))) {
+                !allowedOtherKeys.includes(event.key)) {
                 event.preventDefault();
             }
         };
@@ -3155,9 +3202,9 @@
              * @return {?}
              */
             function (country) {
-                return country.name.toLowerCase().indexOf(text) !== -1 ||
+                return (country.name.toLowerCase().indexOf(text) !== -1 ||
                     country.name.toLowerCase().indexOf(text) !== -1 ||
-                    country.dialCode.toString().toLowerCase().indexOf(text) !== -1;
+                    country.dialCode.toString().toLowerCase().indexOf(text) !== -1);
             }));
         };
         /**
@@ -3266,7 +3313,10 @@
             if (value === null || value === undefined) {
                 return true;
             }
-            if (typeof (value) === 'string' && value === '') {
+            if (typeof value === 'string' && value === '') {
+                return true;
+            }
+            if (typeof value === 'object' && Object.keys(value).length === 0) {
                 return true;
             }
             return false;
@@ -3331,7 +3381,9 @@
              * @param {?} b
              * @return {?}
              */
-            function (a, b) { return (a.priority > b.priority) ? -1 : ((a.priority < b.priority) ? 1 : 0); }));
+            function (a, b) {
+                return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 : 0;
+            }));
         };
         IonIntlTelInputComponent.decorators = [
             { type: core.Component, args: [{
@@ -3345,13 +3397,8 @@
                                  * @return {?}
                                  */
                                 function () { return IonIntlTelInputComponent; })),
-                                multi: true
-                            } /* ,
-                            {
-                              provide: NG_VALIDATORS,
-                              useValue: ionIntlTelInputValidator,
-                              multi: true
-                            } */
+                                multi: true,
+                            },
                         ],
                         styles: [":host{width:100%;display:-webkit-box;display:flex;-webkit-box-align:end;align-items:flex-end}:host .ion-intl-tel-input-code{position:relative}:host .ion-intl-tel-input-number{-webkit-box-flex:1;flex:1}:host .ionic-selectable-label-default,:host .ionic-selectable-label-fixed{max-width:100%}:host .ionic-selectable:not(:host.ionic-selectable-label-stacked):not(:host.ionic-selectable-label-floating) ::ng-deep .ionic-selectable-inner .ionic-selectable-value{padding-top:10px;padding-bottom:10px}:host .ionic-selectable:not(:host.ionic-selectable-label-stacked):not(:host.ionic-selectable-label-floating) ::ng-deep .ionic-selectable-icon-inner{top:17px}:host .flag-icon{margin-right:var(--flag-code-gap,15px)}"]
                     }] }
@@ -3668,11 +3715,11 @@
         /** @type {?} */
         IonIntlTelInputComponent.prototype.country;
         /** @type {?} */
+        IonIntlTelInputComponent.prototype.phoneNumber;
+        /** @type {?} */
         IonIntlTelInputComponent.prototype.countries;
         /** @type {?} */
         IonIntlTelInputComponent.prototype.disabled;
-        /** @type {?} */
-        IonIntlTelInputComponent.prototype.phoneNumber;
         /** @type {?} */
         IonIntlTelInputComponent.prototype.phoneUtil;
         /** @type {?} */
@@ -3730,8 +3777,6 @@
      */
     function IonIntlTelInputModel() { }
     if (false) {
-        /** @type {?} */
-        IonIntlTelInputModel.prototype.number;
         /** @type {?} */
         IonIntlTelInputModel.prototype.internationalNumber;
         /** @type {?} */
