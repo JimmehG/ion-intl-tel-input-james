@@ -1,0 +1,56 @@
+{
+  "version": "1.0.3",
+  "name": "ion-intl-tel-input",
+  "title": "Ion Intl Tel Input",
+  "description": "An Ionic component for International Phone Number Input, that allows all countries, validation with google phone lib, limited countries, preferred countries, virtual scrolling and much more.",
+  "author": {
+    "name": "Azzam Asghar",
+    "url": "https://github.com/azzamasghar1"
+  },
+  "license": "See license in LICENSE",
+  "homepage": "https://github.com/azzamasghar1/ion-intl-tel-input",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azzamasghar1/ion-intl-tel-input"
+  },
+  "bugs": {
+    "url": "https://github.com/azzamasghar1/ion-intl-tel-input/issues"
+  },
+  "keywords": [
+    "ionic",
+    "ionic 2",
+    "ionic 3",
+    "ionic 4",
+    "ion-intl-tel-input",
+    "intl tel input",
+    "intl",
+    "tel",
+    "input",
+    "international",
+    "phone",
+    "phonenumber",
+    "telephone",
+    "number"
+  ],
+  "peerDependencies": {
+    "ionic-selectable": "^4.5.2",
+    "google-libphonenumber": "^3.2.6",
+    "flag-icon-css": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/google-libphonenumber": "^7.4.17"
+  },
+  "main": "bundles/ion-intl-tel-input.umd.js",
+  "module": "fesm5/ion-intl-tel-input.js",
+  "es2015": "fesm2015/ion-intl-tel-input.js",
+  "esm5": "esm5/ion-intl-tel-input.js",
+  "esm2015": "esm2015/ion-intl-tel-input.js",
+  "fesm5": "fesm5/ion-intl-tel-input.js",
+  "fesm2015": "fesm2015/ion-intl-tel-input.js",
+  "typings": "ion-intl-tel-input.d.ts",
+  "metadata": "ion-intl-tel-input.metadata.json",
+  "sideEffects": false,
+  "dependencies": {
+    "tslib": "^1.9.0"
+  }
+}
